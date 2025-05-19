@@ -1,0 +1,62 @@
+version: 2.1
+
+orbs:
+  slack: circleci/slack@4.12.5
+
+jobs:
+  build:
+    docker:
+      - image: cimg/base:2023.03
+    steps:
+      - checkout
+      - run:
+          name: "Run tests"
+          command: |
+            # Your build/test commands here
+            echo "Running tests..."
+            # Uncomment and modify the line below to simulate a failure for testing
+            # exit 1
+      - slack/notify:
+          event: fail
+          template: basic_fail_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "🚨 Build Failed! 🚨",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Project*: ${CIRCLE_PROJECT_REPONAME}\n*Branch*: ${CIRCLE_BRANCH}\n*Commit*: ${CIRCLE_SHA1}\n*Author*: ${CIRCLE_USERNAME}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Failure Analysis & Recommendations:*\n• Check for syntax errors in recent code changes\n• Verify all dependencies are properly installed\n• Look for failed test cases in the build logs\n• Ensure environment variables are correctly set"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "👉 <${CIRCLE_BUILD_URL}|View build details>"
+                  }
+                }
+              ]
+            }
+
+workflows:
+  version: 2
+  build-and-notify:
+    jobs:
+      - build:
+          context: slack-secrets
